@@ -7,12 +7,12 @@ import numpy as np
 
 def filter_source(tx: Transaction, data: np.ndarray, limits: limitStorage):
     # 1st filter _by_currency
-
+    res = _by_currency(tx, data)
     # 2nd filter byTime _by_time
-
+    res = _by_time(tx, res)
     # byMaxLimit
-
-    pass
+    res = _by_limit(tx, res, limits)
+    return res
 
 
 def _by_currency(tx: Transaction, data: np.ndarray):
@@ -43,4 +43,32 @@ def _by_time(tx: Transaction, data: np.ndarray):
 
     return filtered_data
 
+def _by_limit(tx: Transaction, data: np.ndarray, limits: limitStorage):
+    """
+    Фильтрует провайдеров по лимитам (LIMIT_MAX, LIMIT_BY_CARD).
+    """
+    filtered_rows = []
 
+    for row in data:
+        provider_id = row['ID']
+        provider_limits = limits.get(provider_id)
+
+        if not provider_limits:
+            continue  # Пропускаем, если провайдер не найден
+
+        current_total = provider_limits['current_total']
+        limit_max = provider_limits['limit_max']
+        limit_by_card = provider_limits['limit_by_card']
+
+        # Проверяем превышение LIMIT_MAX
+        if current_total + tx.amount > limit_max:
+            continue
+
+        # Проверяем LIMIT_BY_CARD, если платёж по карте и лимит существует
+        if tx.payment == "card" and limit_by_card > 0:
+            if tx.amount > limit_by_card:
+                continue
+
+        filtered_rows.append(row)
+
+    return np.array(filtered_rows, dtype=data.dtype)
