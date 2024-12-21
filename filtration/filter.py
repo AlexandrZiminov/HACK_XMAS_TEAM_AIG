@@ -17,7 +17,7 @@ def filter_source(tx: Transaction, data: np.ndarray, limits: limitStorage):
 
 def _by_currency(tx: Transaction, data: np.ndarray):
     filtered_data = data[
-        (data['CURRENCY'] == tx.cur) & (data['LIMIT_MIN'] <= tx.amount) & (data['LIMIT_MAX'] >= tx.amount)]
+        (data['CURRENCY'] == tx.cur) & (data['MIN_SUM'] <= tx.amount) & (data['MAX_SUM'] >= tx.amount)]
     return filtered_data
 
 
@@ -42,3 +42,5 @@ def _by_time(tx: Transaction, data: np.ndarray):
     filtered_data = np.array(filtered_data, dtype=filtered_data_by_time.dtype)
 
     return filtered_data
+
+
