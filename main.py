@@ -16,13 +16,7 @@ data_tx = np.genfromtxt(
     names=True,
 )
 
-transaction = Transaction(
-    eventTimeRes=data_tx[0]["eventTimeRes"],
-    amount=data_tx[0]["amount"],
-    cur=data_tx[0]["cur"],
-    payment=data_tx[0]["payment"],
-    cardToken=data_tx[0]["cardToken"]
-)
+
 
 data_bank = np.genfromtxt(
     'data/providers_1.csv',
@@ -43,7 +37,28 @@ data_bank = np.genfromtxt(
     names=True,
 )
 
-for j in _by_time(transaction, _by_currency(transaction, data_bank)):
-    print(j)
+index_of_tx = 0
+for tx in data_tx:
+    tx = Transaction(
+        eventTimeRes=data_tx[index_of_tx]["eventTimeRes"],
+        amount=data_tx[index_of_tx]["amount"],
+        cur=data_tx[index_of_tx]["cur"],
+        payment=data_tx[index_of_tx]["payment"],
+        cardToken=data_tx[index_of_tx]["cardToken"]
+    )
+
+    print("-----------------------")
+
+    print(tx)
+
+    for j in _by_time(tx, _by_currency(tx, data_bank)):
+        print(j)
+
+
+    print("-----------------------")
+    index_of_tx += 1
+
+
+
 
 
