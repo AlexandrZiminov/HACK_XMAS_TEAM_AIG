@@ -1,8 +1,17 @@
 import numpy as np
 from domain.limitStorage import LimitStorage
 from domain.transaction import Transaction
-from filtration.filter import filter_source
-from filtration.prioritizationStrategy import calculate_weight
+from core.filter import filter_source
+from core.prioritizationStrategy import calculate_weight
+from core.simulation import simulate_transaction
+import csv
+
+headers = ['eventTimeRes', 'amount', 'cur', 'payment', 'cardToken', 'flow']
+csv_file_name = 'result/result_payments.csv'
+
+with open(csv_file_name, mode='w', newline='', encoding='utf-8') as file:
+    writer = csv.writer(file)
+    writer.writerow(headers)
 
 data_tx = np.genfromtxt(
     'data/payments_1.csv',
@@ -37,17 +46,20 @@ data_bank = np.genfromtxt(
 )
 
 limits_storage = LimitStorage()
+sum_time = 0.0
+sum_clear_amount = 0.0
+
 for row in data_bank:
     limits_storage.set(row['ID'], {
         'current_total': 0.0,
         'limit_by_card': row['LIMIT_BY_CARD'],
+        'current_limit_by_card': {},
         'limit_max': row['LIMIT_MAX'],
         'limit_min': row['LIMIT_MIN'],
     })
 
-print("Инициализация limitStorage завершена:")
-for key, value in limits_storage.items():
-    print(f"Provider {key}: {value}")
+# for key, value in limits_storage.items():
+#     print(f"Provider {key}: {value}")
 
 for tx_row in data_tx:
     tx = Transaction(
@@ -57,10 +69,6 @@ for tx_row in data_tx:
         payment=tx_row["payment"],
         cardToken=tx_row["cardToken"]
     )
-
-    print("-----------------------")
-
-    print(f"Transaction: {tx}")
 
     filtered_providers = filter_source(tx, data_bank, limits_storage)
 
@@ -80,10 +88,36 @@ for tx_row in data_tx:
         weight = calculate_weight(row_dict)
         candidates.append((provider_id, weight, row))
 
-    candidates.sort(key=lambda x: x[1], reverse=True)
+    candidates.sort(reverse=True, key=lambda x: x[1])
 
-    print("Prioritized Providers:")
-    for provider_id, weight, row in candidates:
-        print(f"Provider {provider_id}: Weight={weight}")
+    final_chain = []
 
-    print("-----------------------")
+    if candidates:
+        for candidate in candidates:
+            simulated_tx = simulate_transaction(tx, candidate, limits_storage, sum_time, sum_clear_amount, final_chain)
+            if simulated_tx[3]:
+                sum_time = simulated_tx[0]
+                sum_clear_amount = simulated_tx[1]
+                final_chain = simulated_tx[2]
+                with open(csv_file_name, mode='a', newline='', encoding='utf-8') as file:
+                    writer = csv.writer(file)
+
+                    final_chain = '-'.join([str(i) for i in simulated_tx[2]])
+                    tx_row_list = list(tx_row)
+                    tx_row_list.append(final_chain)
+
+                    writer.writerow(tx_row_list)
+                break
+            else:
+                sum_time = simulated_tx[0]
+                final_chain = simulated_tx[2]
+                index = candidates.index(candidate)
+                if index == (len(candidates) - 1):
+                    with open(csv_file_name, mode='a', newline='', encoding='utf-8') as file:
+                        writer = csv.writer(file)
+
+                        final_chain = '-'.join([str(i) for i in simulated_tx[2]])
+                        tx_row_list = list(tx_row)
+                        tx_row_list.append(final_chain)
+
+                        writer.writerow(tx_row_list)

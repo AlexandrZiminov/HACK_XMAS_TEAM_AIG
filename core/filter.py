@@ -8,7 +8,7 @@ import numpy as np
 def filter_source(tx: Transaction, data: np.ndarray, limits: limitStorage):
     # 1st filter _by_currency
     res = _by_currency(tx, data)
-    # 2nd filter byTime _by_time
+    # 2nd filter _by_time
     res = _by_time(tx, res)
     # byMaxLimit
     res = _by_limit(tx, res, limits)
@@ -61,12 +61,12 @@ def _by_limit(tx: Transaction, data: np.ndarray, limits: limitStorage):
         limit_max = provider_limits['limit_max']
         limit_by_card = provider_limits['limit_by_card']
 
-        if current_total + tx.amount > limit_max:
-            continue
-
-        if tx.payment == "card" and limit_by_card > 0:
-            if tx.amount > limit_by_card:
-                continue
+        # if current_total + tx.amount > limit_max:
+        #     continue
+        #
+        # if tx.payment == "card" and limit_by_card > 0:
+        #     if tx.amount > limit_by_card:
+        #         continue
 
         filtered_rows.append(row)
 
