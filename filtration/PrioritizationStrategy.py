@@ -31,6 +31,14 @@ def calculate_weight(row):
     limit_risk_penalty = max_limit * limit_risk
 
     weight = success_rate - commission_penalty - time_penalty + limit_incentive_bonus - limit_risk_penalty
+    # Логирование для отладки
+    print(f"Provider {row['ID']}:")
+    print(f"  Success Rate: {success_rate}")
+    print(f"  Commission Penalty: {commission_penalty}")
+    print(f"  Time Penalty: {time_penalty}")
+    print(f"  Limit Incentive Bonus: {limit_incentive_bonus}")
+    print(f"  Limit Risk Penalty: {limit_risk_penalty}")
+    print(f"  Final Weight: {weight}\n")
     return weight
 
 #     weight = (
