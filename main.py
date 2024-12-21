@@ -1,5 +1,5 @@
 import numpy as np
-from domain.limitStorage import limitStorage
+from domain.limitStorage import LimitStorage
 from domain.transaction import Transaction
 from filtration.filter import filter_source
 from filtration.PrioritizationStrategy import calculate_weight
@@ -36,8 +36,7 @@ data_bank = np.genfromtxt(
     names=True,
 )
 
-# Инициализация LimitStorage
-limits_storage = limitStorage()
+limits_storage = LimitStorage()
 for row in data_bank:
     limits_storage.set(row['ID'], {
         'current_total': 0.0,
@@ -50,7 +49,6 @@ print("Инициализация limitStorage завершена:")
 for key, value in limits_storage.items():
     print(f"Provider {key}: {value}")
 
-# Обработка транзакций
 for tx_row in data_tx:
     tx = Transaction(
         eventTimeRes=tx_row["eventTimeRes"],
@@ -64,10 +62,8 @@ for tx_row in data_tx:
 
     print(f"Transaction: {tx}")
 
-    # Фильтрация провайдеров
     filtered_providers = filter_source(tx, data_bank, limits_storage)
 
-    # Рассчитываем веса для провайдеров
     candidates = []
     for row in filtered_providers:
         provider_id = row['ID']
@@ -84,10 +80,8 @@ for tx_row in data_tx:
         weight = calculate_weight(row_dict)
         candidates.append((provider_id, weight, row))
 
-    # Сортируем провайдеров по убыванию веса
     candidates.sort(key=lambda x: x[1], reverse=True)
 
-    # Вывод приоритизированных провайдеров
     print("Prioritized Providers:")
     for provider_id, weight, row in candidates:
         print(f"Provider {provider_id}: Weight={weight}")

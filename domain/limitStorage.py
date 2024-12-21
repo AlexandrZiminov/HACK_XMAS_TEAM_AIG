@@ -1,9 +1,9 @@
-class limitStorage:
+class LimitStorage:
     _instance = None
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
-            cls._instance = super(limitStorage, cls).__new__(cls)
+            cls._instance = super(LimitStorage, cls).__new__(cls)
             cls._instance._data = {}
         return cls._instance
 
@@ -19,8 +19,8 @@ class limitStorage:
     def items(self):
         return self._data.items()
 
-    def updateLimitByKey(self, key, value):
+    def update_limit_by_key(self, key, value):
         self._data[key] += value
 
-    def getLimitByKey(self, key):
+    def get_limit_by_key(self, key):
         return self._data[key]

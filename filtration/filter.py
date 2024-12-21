@@ -16,14 +16,17 @@ def filter_source(tx: Transaction, data: np.ndarray, limits: limitStorage):
 
 
 def _by_currency(tx: Transaction, data: np.ndarray):
+
     filtered_data = data[
         (data['CURRENCY'] == tx.cur) & (data['MIN_SUM'] <= tx.amount) & (data['MAX_SUM'] >= tx.amount)]
     return filtered_data
 
 
 def _by_time(tx: Transaction, data: np.ndarray):
+
     tx_creation_time = datetime.strptime(tx.eventTimeRes, '%Y-%m-%d %H:%M:%S')
-    filtered_data_by_time = data[[datetime.strptime(row['TIME'], '%Y-%m-%d %H:%M:%S') <= tx_creation_time for row in data]]
+    filtered_data_by_time = data[
+        [datetime.strptime(row['TIME'], '%Y-%m-%d %H:%M:%S') <= tx_creation_time for row in data]]
 
     filtered_data_by_time['TIME'] = np.array(
         [datetime.strptime(row, '%Y-%m-%d %H:%M:%S') for row in filtered_data_by_time['TIME']]
@@ -33,7 +36,6 @@ def _by_time(tx: Transaction, data: np.ndarray):
 
     filtered_data = []
     for unique_id in unique_ids:
-
         filtered = filtered_data_by_time[filtered_data_by_time['ID'] == unique_id]
 
         max_time_index = np.argmax(filtered['TIME'])
@@ -43,10 +45,9 @@ def _by_time(tx: Transaction, data: np.ndarray):
 
     return filtered_data
 
+
 def _by_limit(tx: Transaction, data: np.ndarray, limits: limitStorage):
-    """
-    Фильтрует провайдеров по лимитам (LIMIT_MAX, LIMIT_BY_CARD).
-    """
+
     filtered_rows = []
 
     for row in data:
@@ -54,17 +55,15 @@ def _by_limit(tx: Transaction, data: np.ndarray, limits: limitStorage):
         provider_limits = limits.get(provider_id)
 
         if not provider_limits:
-            continue  # Пропускаем, если провайдер не найден
+            continue
 
         current_total = provider_limits['current_total']
         limit_max = provider_limits['limit_max']
         limit_by_card = provider_limits['limit_by_card']
 
-        # Проверяем превышение LIMIT_MAX
         if current_total + tx.amount > limit_max:
             continue
 
-        # Проверяем LIMIT_BY_CARD, если платёж по карте и лимит существует
         if tx.payment == "card" and limit_by_card > 0:
             if tx.amount > limit_by_card:
                 continue
