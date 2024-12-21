@@ -2,7 +2,7 @@ import numpy as np
 from domain.limitStorage import LimitStorage
 from domain.transaction import Transaction
 from filtration.filter import filter_source
-from filtration.PrioritizationStrategy import calculate_weight
+from filtration.prioritizationStrategy import calculate_weight
 
 data_tx = np.genfromtxt(
     'data/payments_1.csv',
