@@ -10,6 +10,7 @@ import csv
 headers = ['eventTimeRes', 'amount', 'cur', 'payment', 'cardToken', 'flow']
 csv_file_name = 'result/result_payments.csv'
 
+
 with open(csv_file_name, mode='w', newline='', encoding='utf-8') as file:
     writer = csv.writer(file)
     writer.writerow(headers)
@@ -84,6 +85,7 @@ for tx_row in data_tx:
         payment=tx_row["payment"],
         cardToken=tx_row["cardToken"]
     )
+    
 
     filtered_providers = filter_source(tx, data_bank, limits_storage)
 
