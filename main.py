@@ -85,6 +85,7 @@ for tx_row in data_tx:
         payment=tx_row["payment"],
         cardToken=tx_row["cardToken"]
     )
+
     
 
     filtered_providers = filter_source(tx, data_bank, limits_storage)
