@@ -6,6 +6,7 @@ from core.prioritizationStrategy import calculate_weight
 from core.simulation import simulate_transaction
 import csv
 
+
 headers = ['eventTimeRes', 'amount', 'cur', 'payment', 'cardToken', 'flow']
 csv_file_name = 'result/result_payments.csv'
 
