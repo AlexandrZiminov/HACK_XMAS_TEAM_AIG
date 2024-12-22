@@ -61,8 +61,9 @@ def _by_limit(tx: Transaction, data: np.ndarray, limits: limitStorage):
         limit_max = provider_limits['limit_max']
         limit_by_card = provider_limits['limit_by_card']
 
-        # if current_total + tx.amount > limit_max:
-        #     continue
+        if current_total + tx.amount > limit_max:
+            print(f"Limit exceeded for {provider_id} at {tx.eventTimeRes}")
+            continue
         #
         # if tx.payment == "card" and limit_by_card > 0:
         #     if tx.amount > limit_by_card:

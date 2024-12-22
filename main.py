@@ -13,6 +13,16 @@ with open(csv_file_name, mode='w', newline='', encoding='utf-8') as file:
     writer = csv.writer(file)
     writer.writerow(headers)
 
+data_rates = np.genfromtxt(
+    'data/ex_rates.csv',
+    delimiter=',',
+    dtype=[
+        ('rate', 'f8'),
+        ('destination', 'U10'),
+    ],
+    names=True,
+)
+
 data_tx = np.genfromtxt(
     'data/payments_1.csv',
     delimiter=',',
@@ -49,7 +59,11 @@ limits_storage = LimitStorage()
 sum_time = 0.0
 sum_clear_amount = 0.0
 
-for row in data_bank:
+unique_ids = np.unique(data_bank['ID'])
+
+for unique_id in unique_ids:
+    row = data_bank[data_bank['ID'] == unique_id][0]
+
     limits_storage.set(row['ID'], {
         'current_total': 0.0,
         'limit_by_card': row['LIMIT_BY_CARD'],
@@ -92,27 +106,20 @@ for tx_row in data_tx:
 
     final_chain = []
 
+    rates = data_rates['rate'][data_rates['destination'] == tx.cur]
+    rate = float(rates[0])
+
     if candidates:
+        tx_time = 0.0
         for candidate in candidates:
-            simulated_tx = simulate_transaction(tx, candidate, limits_storage, sum_time, sum_clear_amount, final_chain)
-            if simulated_tx[3]:
-                sum_time = simulated_tx[0]
-                sum_clear_amount = simulated_tx[1]
-                final_chain = simulated_tx[2]
-                with open(csv_file_name, mode='a', newline='', encoding='utf-8') as file:
-                    writer = csv.writer(file)
-
-                    final_chain = '-'.join([str(i) for i in simulated_tx[2]])
-                    tx_row_list = list(tx_row)
-                    tx_row_list.append(final_chain)
-
-                    writer.writerow(tx_row_list)
-                break
-            else:
-                sum_time = simulated_tx[0]
-                final_chain = simulated_tx[2]
-                index = candidates.index(candidate)
-                if index == (len(candidates) - 1):
+            if tx_time < 60.0:
+                simulated_tx = simulate_transaction(tx, candidate, limits_storage, sum_time, sum_clear_amount, final_chain,
+                                                    rate)
+                if simulated_tx[3]:
+                    sum_time = simulated_tx[0]
+                    sum_clear_amount = simulated_tx[1]
+                    cur = simulated_tx[1]
+                    final_chain = simulated_tx[2]
                     with open(csv_file_name, mode='a', newline='', encoding='utf-8') as file:
                         writer = csv.writer(file)
 
@@ -121,3 +128,40 @@ for tx_row in data_tx:
                         tx_row_list.append(final_chain)
 
                         writer.writerow(tx_row_list)
+                    break
+                else:
+                    sum_time = simulated_tx[0]
+                    final_chain = simulated_tx[2]
+                    index = candidates.index(candidate)
+                    tx_time += simulated_tx[4]
+                    if index == (len(candidates) - 1):
+                        with open(csv_file_name, mode='a', newline='', encoding='utf-8') as file:
+                            writer = csv.writer(file)
+
+                            final_chain = '-'.join([str(i) for i in simulated_tx[2]])
+                            tx_row_list = list(tx_row)
+                            tx_row_list.append(final_chain)
+
+                            writer.writerow(tx_row_list)
+            else:
+                with open(csv_file_name, mode='a', newline='', encoding='utf-8') as file:
+                    writer = csv.writer(file)
+
+                    final_chain = '-'.join([str(i) for i in final_chain])
+                    tx_row_list = list(tx_row)
+                    tx_row_list.append(final_chain)
+
+                    writer.writerow(tx_row_list)
+                print("Time for chain more than 60 sec")
+    else:
+        with open(csv_file_name, mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+
+            final_chain = '-'
+            tx_row_list = list(tx_row)
+            tx_row_list.append(final_chain)
+
+            writer.writerow(tx_row_list)
+
+print(str(sum_time) + "seconds")
+print("$" + str(sum_clear_amount))
